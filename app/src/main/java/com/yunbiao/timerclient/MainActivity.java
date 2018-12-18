@@ -100,12 +100,6 @@ public class MainActivity extends AppCompatActivity {
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         singleThread = Executors.newSingleThreadExecutor();
         rootFile = new File(ROOT_DIR, RES_DIR_NAME);
-
-        //如果设备是12小时制会出现问题，需要重新设置一次
-        if(!tcDate.is24HourModeEnabled()){
-            tcDate.setFormat12Hour("yyyy-MM-dd \nEEEE \nHH:mm:ss");
-        }
-
     }
 
     private void registBroad() {
@@ -114,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
         intentFilter.addDataScheme("file");
         registerReceiver(usbBroad, intentFilter);
-
     }
 
     //文件筛选

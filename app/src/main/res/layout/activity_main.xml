@@ -50,7 +50,8 @@
 
     <TextClock
         android:lineSpacingExtra="46dp"
-        android:format24Hour="yyyy-MM-dd \nEEEE \nHH:mm:ss"
+        android:format24Hour="yyyy-MM-dd \nEEEE \nk:mm:ss"
+        android:format12Hour="yyyy-MM-dd \nEEEE \nak:mm:ss"
         android:gravity="center_horizontal"
         android:layout_weight="0.5"
         android:id="@+id/tc_date"
