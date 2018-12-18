@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ll_rootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical"
+    tools:context="com.yunbiao.timerclient.MainActivity">
+
+    <TextView
+        android:text="121313121"
+        android:id="@+id/tv_timer_title"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.6"
+        android:gravity="bottom|center_horizontal"
+        android:paddingBottom="50dp"
+        android:textColor="#BB000000"
+        android:textSize="56dp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/ll_timer_area"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:gravity="top|center_horizontal"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_timer_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="#ff0000"
+            android:textSize="190dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="天"
+            android:textColor="#BB000000"
+            android:textSize="56dp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <TextClock
+        android:lineSpacingExtra="46dp"
+        android:format24Hour="yyyy-MM-dd \nEEEE \nHH:mm:ss"
+        android:gravity="center_horizontal"
+        android:layout_weight="0.5"
+        android:id="@+id/tc_date"
+        android:layout_gravity="center_horizontal"
+        android:textColor="@android:color/black"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:textSize="60dp" />
+
+</LinearLayout>
