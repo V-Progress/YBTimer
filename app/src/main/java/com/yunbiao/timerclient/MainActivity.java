@@ -64,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
     //取得授权的设备的到期时间
     private static Map<String,Date> bindList = new HashMap<>();
     static {
-        bindList.put("28:f3:66:e9:b0:7c",new Date(118, 11, 19));//118:当前年份减去1900，11:十二月 19:日期
+        bindList.put("28:f3:66:e9:b0:7c",new Date(119, 11, 18));//118:当前年份减去1900，11:十二月 19:日期
+        bindList.put("14:6b:9c:1a:64:e6",new Date(119, 11, 18));
     }
 
     @Override
@@ -254,9 +255,10 @@ public class MainActivity extends AppCompatActivity {
 
     //判断如果map中包含当前mac地址且日期未过期
     private boolean getAuth(){
+        String mac = getLocalMacAddressFromWifiInfo(this);
         Set<Map.Entry<String, Date>> entries = bindList.entrySet();
         for (Map.Entry<String, Date> entry : entries) {
-            if(TextUtils.equals(entry.getKey(),getLocalMacAddressFromWifiInfo(this))
+            if(TextUtils.equals(entry.getKey(),mac)
                     & !new Date().after(entry.getValue())){
                 return true;
             }
@@ -269,11 +271,11 @@ public class MainActivity extends AppCompatActivity {
      * @param context
      * @return
      */
-    public static String getLocalMacAddressFromWifiInfo(Context context){
+    public String getLocalMacAddressFromWifiInfo(Context context){
         WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo winfo = wifi.getConnectionInfo();
         String mac =  winfo.getMacAddress();
-        return mac;
+        return mac.toLowerCase();
     }
 
     //设置空文件提示
