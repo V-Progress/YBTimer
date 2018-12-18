@@ -15,6 +15,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,16 +65,18 @@ public class MainActivity extends AppCompatActivity {
     //取得授权的设备的到期时间
     private static Map<String,Date> bindList = new HashMap<>();
     static {
-        bindList.put("28:f3:66:e9:b0:7c",new Date(119, 11, 18));//118:当前年份减去1900，11:十二月 19:日期
-        bindList.put("14:6b:9c:1a:64:e6",new Date(119, 11, 18));
+        bindList.put("28:f3:66:e9:b0:7c",new Date(119, 12, 18));//118:当前年份减去1900，11:十二月 19:日期
+        bindList.put("14:6b:9c:1a:64:e6",new Date(119, 12, 18));
     }
+
+    private TextClock tcDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         //判断是否授权
-        if(!getAuth()){
+        if(!auth()){
             setContentView(R.layout.activity_wel);
             return;
         }
@@ -90,12 +93,19 @@ public class MainActivity extends AppCompatActivity {
         tvTimerNum = (TextView) findViewById(R.id.tv_timer_num);
         llTimerArea = (LinearLayout) findViewById(R.id.ll_timer_area);
         llRootView = (LinearLayout) findViewById(R.id.ll_rootView);
+        tcDate = (TextClock) findViewById(R.id.tc_date);
     }
 
     private void initData() {
         simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         singleThread = Executors.newSingleThreadExecutor();
         rootFile = new File(ROOT_DIR, RES_DIR_NAME);
+
+        //如果设备是12小时制会出现问题，需要重新设置一次
+        if(!tcDate.is24HourModeEnabled()){
+            tcDate.setFormat12Hour("yyyy-MM-dd \nEEEE \nHH:mm:ss");
+        }
+
     }
 
     private void registBroad() {
@@ -254,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //判断如果map中包含当前mac地址且日期未过期
-    private boolean getAuth(){
+    private boolean auth(){
         String mac = getLocalMacAddressFromWifiInfo(this);
         Set<Map.Entry<String, Date>> entries = bindList.entrySet();
         for (Map.Entry<String, Date> entry : entries) {
@@ -273,9 +283,17 @@ public class MainActivity extends AppCompatActivity {
      */
     public String getLocalMacAddressFromWifiInfo(Context context){
         WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        if(!wifi.isWifiEnabled()){
+            boolean b = wifi.setWifiEnabled(true);
+            Log.d(TAG,"WIFI被关闭，先打开"+b);
+        }
+
         WifiInfo winfo = wifi.getConnectionInfo();
         String mac =  winfo.getMacAddress();
-        return mac.toLowerCase();
+        if(!TextUtils.isEmpty(mac)){
+            mac = mac.toLowerCase();
+        }
+        return mac;
     }
 
     //设置空文件提示
