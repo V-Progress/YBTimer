@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     //取得授权的设备的到期时间
     private static Map<String,Date> bindList = new HashMap<>();
     static {
-        bindList.put("28:f3:66:e9:b0:7c",new Date(118, 11, 19));
+        bindList.put("28:f3:66:e9:b0:7c",new Date(118, 11, 19));//118:当前年份减去1900，11:十二月 19:日期
     }
 
     @Override
