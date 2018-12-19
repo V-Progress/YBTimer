@@ -108,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
         intentFilter.addDataScheme("file");
         registerReceiver(usbBroad, intentFilter);
+
+
     }
 
     //文件筛选
