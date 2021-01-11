@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -40,18 +41,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static String[] PERMISSONS = {android.Manifest.permission.READ_EXTERNAL_STORAGE
+            , android.Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
     private final String TAG = getClass().getSimpleName();
 
-    private final String ROOT_DIR = Environment.getExternalStorageDirectory().getAbsolutePath();//外存根目录
+    private final String ROOT_DIR = Environment.getExternalStorageDirectory().getPath();//外存根目录
     private final String RES_DIR_NAME = "yunbiao_time";//应用根目录
     private final String FILE_NAME = "time.txt";//文件名
 
     private final String KEY_TITLE = "title";//标题
     private final String KEY_DATE = "date";//计时到期日
     private final String KEY_IMAGE = "image";//背景图片
+    private static final String KEY_TITLE_COLOR = "titleColor";
+    private static final String KEY_TIME_COLOR = "timeColor";
+    private static final String KEY_NUMBER_COLOR = "numberColor";
 
     private TextView tvTimerTitle;
     private TextView tvTimerNum;
@@ -65,28 +73,61 @@ public class MainActivity extends AppCompatActivity {
     //取得授权的设备的到期时间
     private static Map<String,Date> bindList = new HashMap<>();
     static {
-        bindList.put("28:f3:66:e9:b0:7c",new Date(119, 12, 18));//118:当前年份减去1900，11:十二月 19:日期
-        bindList.put("14:6b:9c:1a:64:e6",new Date(119, 12, 18));
+        bindList.put("28:f3:66:e9:b0:7c",new Date(119, 12, 20));//118:当前年份减去1900，11:十二月 19:日期
+        bindList.put("14:6b:9c:1a:64:e6",new Date(119, 12, 20));
+        bindList.put("58:b3:fc:aa:70:fb",new Date(119, 12, 20));
     }
 
     private TextClock tcDate;
+    private YBPermission ybPermission;
+    private TextView tvTian;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //判断是否授权
-        if(!auth()){
-            setContentView(R.layout.activity_wel);
-            return;
-        }
+//        //判断是否授权
+//        if(!auth()){
+//            setContentView(R.layout.activity_wel);
+//            return;
+//        }
 
         setContentView(R.layout.activity_main);
         registBroad();
         initView();
         initData();
-        checkFile();
+        checkPermission();
     }
+
+    private void checkPermission(){
+        ybPermission = new YBPermission(permissionListener);
+        ybPermission.checkPermission(this, PERMISSONS);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (ybPermission != null) {
+            ybPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private YBPermission.PermissionListener permissionListener = new YBPermission.PermissionListener() {
+        @Override
+        public void onPermissionFailed(String[] objects) {
+            Toast.makeText(MainActivity.this, "请赋予相应的权限", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onFinish(boolean isComplete) {
+            if (!isComplete) {
+                Toast.makeText(MainActivity.this, "请赋予相应的权限", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            checkFile();
+       }
+    };
 
     private void initView() {
         tvTimerTitle = (TextView) findViewById(R.id.tv_timer_title);
@@ -94,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         llTimerArea = (LinearLayout) findViewById(R.id.ll_timer_area);
         llRootView = (LinearLayout) findViewById(R.id.ll_rootView);
         tcDate = (TextClock) findViewById(R.id.tc_date);
+        tvTian = (TextView) findViewById(R.id.tv_tian);
     }
 
     private void initData() {
@@ -142,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 File timeFile = files[0];
                 StringBuilder str = new StringBuilder();
                 try {
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(timeFile), "GBK"));
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(timeFile), "UTF-8"));
                     String tempString = null;
                     while ((tempString = bufferedReader.readLine()) != null) {
                         str.append(tempString);
@@ -160,6 +202,9 @@ public class MainActivity extends AppCompatActivity {
                     final String title = jsonObject.getString(KEY_TITLE);
                     final String date = jsonObject.getString(KEY_DATE);
                     final String image = jsonObject.getString(KEY_IMAGE);
+                    final String titleColor = jsonObject.getString(KEY_TITLE_COLOR);
+                    final String timeColor = jsonObject.getString(KEY_TIME_COLOR);
+                    final String numberColor = jsonObject.getString(KEY_NUMBER_COLOR);
 
                     if (TextUtils.isEmpty(title) || TextUtils.isEmpty(date)) {
                         setEmptyText("标题或日期未找到，请检查" + FILE_NAME + " 文件");
@@ -190,12 +235,15 @@ public class MainActivity extends AppCompatActivity {
 
                             showTitle(title);
                             showTime(String.valueOf(daysBetween));
+                            setColor(titleColor,numberColor,timeColor);
                         }
                     });
 
                 } catch (JSONException e) {
+                    e.printStackTrace();
                     setEmptyText("文件格式错误，请检查" + FILE_NAME + " 文件");
                 } catch (ParseException e) {
+                    e.printStackTrace();
                     setEmptyText("目标日期格式不正确，正确格式为1970-01-01");
                 }
             }
@@ -261,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
     //判断如果map中包含当前mac地址且日期未过期
     private boolean auth(){
         String mac = getLocalMacAddressFromWifiInfo(this);
+        Log.e(TAG, "mac-------------->"+mac );
         Set<Map.Entry<String, Date>> entries = bindList.entrySet();
         for (Map.Entry<String, Date> entry : entries) {
             if(TextUtils.equals(entry.getKey(),mac)
@@ -311,6 +360,32 @@ public class MainActivity extends AppCompatActivity {
     private void showTime(String time) {
         llTimerArea.setVisibility(View.VISIBLE);
         tvTimerNum.setText(time);
+    }
+
+    private void setColor(String titleColor,String numberColor,String timeColor){
+        if(!TextUtils.isEmpty(titleColor)){
+            try{
+                tvTimerTitle.setTextColor(Color.parseColor(titleColor));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        if(!TextUtils.isEmpty(numberColor)){
+            try{
+                tvTimerNum.setTextColor(Color.parseColor(numberColor));
+                tvTian.setTextColor(Color.parseColor(numberColor));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(!TextUtils.isEmpty(timeColor)){
+            try{
+                tcDate.setTextColor(Color.parseColor(timeColor));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
